@@ -9,11 +9,11 @@ class ProgressBar:
     def log(self, s):
         sys.stdout.write(' ' * (self.width + 9) + '\r')
         sys.stdout.flush()
-        print s
+        #print s
         progress = self.width * self.count / self.total
         percent = self.count/float(self.total) *100
         sys.stdout.write('{0:3}/{1:3}: '.format(self.count, self.total))
-        sys.stdout.write('['+'>' * progress + '-' * (self.width - progress)+']'+'{:>5,.2f}'.format(percent)+'%' + '\r')
+        sys.stdout.write('['+'>' * progress + '-' * (self.width - progress)+'] '+'{:>5,.2f}'.format(percent)+'%' + '\r')
         if progress == self.width:
             sys.stdout.write('\n')
         sys.stdout.flush()
