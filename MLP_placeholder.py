@@ -7,9 +7,12 @@ import ProgressBar as pb
 
 
 hop = 71
-timestep_size = 71                # Hours of looking ahead
+timestep_size = 71      # Hours of looking ahead
 output_parameters = 3   # Number of predicting parameters
 num_stations = 3        # Number of monitoring stations
+
+training_epochs = 200   # Number of training Epochs
+total_batch = 12288     # Number of training instance
 
 
 data_dir = "./dev_data/"
@@ -100,35 +103,22 @@ y = tf.placeholder( )       # TODO: Add here
 # TODO: --------------------------------------------
 # TODO:          Construct Training Algo
 # TODO: --------------------------------------------
-W = tf.Variable(tf.truncated_normal([hidden_size, output_parameters],
-                                    stddev=0.1),
-                dtype=tf.float32)
-bias = tf.Variable(tf.constant(0.1, shape=[output_parameters]),
-                   dtype=tf.float32)
-y_pre = tf.matmul(_X, W) + bias
 
-cross_entropy = -tf.reduce_mean(y * tf.log(y_pre))
-train_op = tf.train.AdamOptimizer(lr).minimize(cross_entropy)
-loss = tf.reduce_mean(tf.abs(y_pre-y), 0)
 
-# --------------------------------------------
-#               Start Training
-# --------------------------------------------
-sess.run(tf.global_variables_initializer())
-count = 0
-for i in range(6000):
-    _batch_size = 384
-    batch = random.randint(5, 36)
-    start = batch*_batch_size
-    end = (batch+1)*_batch_size
-    sess.run(train_op,
-             feed_dict={_X:data[start:end],
-                        y: target_set[start:end],
-                        batch_size: 384})
-    if not (i % 20):
-        acc = sess.run(loss,
-                       feed_dict={_X: data[1152:1536],
-                                  y: target_set[1152:1536],
-                                  batch_size: 384})
-        print("Epoch:"+str(count)+str(acc))
-        count = count+1
+cost =
+accuracy =
+optimizer =
+
+# TODO:--------------------------------------------
+# TODO:              Start Training
+# TODO:--------------------------------------------
+
+avg_cost = 0
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for epoch in range(training_epochs):
+        for i in range(total_batch):
+            _, c = sess.run([optimizer, cost],
+                            feed_dict={_X: training_set,
+                                       y:training_target})
+            avg_cost += c / total_batch
