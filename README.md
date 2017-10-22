@@ -1,10 +1,47 @@
 tf_learn
 ===
-这是一个用来练习tensonflow的repo。
+这是一个用来练习tensonflow的repo。数据集是一组空气数据，详见下面的数据介绍，目标是24小时之后的三种污染物的浓度，输入是三个城市每个城市12个数据项，共71小时的历史数据（71\*(12\*3））。目标是使用71小时，三个城市的历史数据，预测24小时后北京的三种空气污染物的情况。
 
-tf_Baseline_dev.py
+
+Day 1:MLP & Placeholder & Reshape
 ---
-重要的代码都在这里面，数据处理以及最终的ComputationGraph的构建以及训练的代码。
+需要写代码位于*MLP_placeholder.py*。
+
+现在我们的数据集的形状：Target是（14208，3），Data是 （14208，71，36）
+
+这代表着我们有14208组训练数据，训练的目标有三个，而每一个训练数据的样例的维度是71*36.
+
+首先我们需要构建一个71\*36的Placeholder用于送入输入数据，以及一个3维的Placeholder作为输出数据。
+
+利用tf.Reshape把每一个训练数据进行Reshape，将71*36转变成2556维的一个Tensor。
+
+同时构建一个多层感知器网络MLP，并定义优化器（optimizer），损失函数（cost），以及准确率的计算方式（accuracy，平均方差，或者平均绝对差，或者对数方差等）。MLP具体做法可以参考网络博客，而优化器可以使用SGD，cost需要使用tf.reduce_mean等函数，可以从官网上查到使用方法。
+
+初始化所有变量后，可以使用：
+		
+		with tf.Session() as sess:
+    		sess.run(init)
+    		for epoch in range(training_epochs):
+    			for i in range(total_batch):
+            		_, c = sess.run([optimizer,cost],feed_dict={_X: Something，Y:Something])    
+        		avg_cost += c / total_batch
+开始训练。
+
+外层循环叫做epoch，为训练的次数，内层循环遍历所有的训练样例（在此情况下14208个）
+
+测试时可以使用测试集，计算自己指定的表示准确率的数值（accuracy）
+
+		acc = accuracy.eval({x: X_test, y: y_test})
+
+
+P.S. 这种做法我没有测试过标准结果，由于数据集分割问题，训练一开始有可能会出现测试集准确率高于训练集的情况。
+
+
+
+tf\_Baseline_dev.py
+---
+这是一个LSTM的实现，如果有疑问可以看看里面的做法，重要的代码都在这里面，数据处理以及最终的ComputationGraph的构建以及训练的代码。
+
 数据
 ---
 其中数据位于dev_data中，这里面的每一个文件的文件名都是UNIX时间戳，每个文件中有三行数据，分别是北京天津和葫芦岛在这个时间点的空气质量数据以及天气数据。
@@ -34,6 +71,7 @@ tf_Baseline_dev.py
 ProgressBar.py
 ---
 随便编的一个表示读取速度的进度条。似乎只有在控制台里面才能看到。
+
 
 divideSimple.py
 ---
