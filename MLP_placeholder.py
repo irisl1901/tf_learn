@@ -94,12 +94,12 @@ batch_size = tf.placeholder(tf.int32)
 # None corresponds to the batch size, can be of any size
 _X = tf.placeholder(tf.float32,[None, 71, 36])      # Add here
 y = tf.placeholder(tf.float32, [None, 3])       # Add here
-tf.reshape(_X, [-1])
+# tf.reshape(_X, [-1])
 keep_prob = tf.placeholder(tf.float32)
 
-# TODO: --------------------------------------------
-# TODO:       Construct MLP computation graph
-# TODO: --------------------------------------------
+# --------------------------------------------
+#        Construct MLP computation graph
+#  --------------------------------------------
 
 in_units = 2556
 h1_units = 300
@@ -112,9 +112,9 @@ h1 = tf.nn.relu(tf.matmul(_X, W1) + b1)
 h1_drop = tf.nn.dropout(h1, keep_prob)
 y_ = tf.nn.softmax(tf.matmul(h1_drop, W2) + b2)
 
-# TODO: --------------------------------------------
-# TODO:          Construct Training Algo
-# TODO: --------------------------------------------
+# --------------------------------------------
+#           Construct Training Algo
+# --------------------------------------------
 
 # test
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y), reduction_indices=[1]))
@@ -124,9 +124,9 @@ accuracy = tf.reduce_mean(tf.cast((correct_prediction, tf.float32)))
 
 optimizer = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
-# TODO:--------------------------------------------
-# TODO:              Start Training
-# TODO:--------------------------------------------
+# --------------------------------------------
+#               Start Training
+# --------------------------------------------
 
 avg_cost = 0
 with tf.Session() as sess:
