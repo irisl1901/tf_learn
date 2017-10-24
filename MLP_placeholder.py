@@ -103,9 +103,9 @@ keep_prob = tf.placeholder(tf.float32)
 
 in_units = 2556
 h1_units = 300
-W1 = tf.Variable(tf.truncated_normal([in_units, h1_units], stddev=0.1))
+W1 = tf.Variable(tf.truncated_normal([batch_size, in_units, h1_units], stddev=0.1))
 b1 = tf.Variable(tf.zeros([h1_units]))
-W2 = tf.Variable(tf.zeros([h1_units, 3]))
+W2 = tf.Variable(tf.zeros([batch_size, h1_units, 3]))
 b2 = tf.Variable(tf.zeros([3]))
 
 h1 = tf.nn.relu(tf.matmul(_X, W1) + b1)
