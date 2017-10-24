@@ -96,22 +96,10 @@ _X = tf.placeholder(tf.float32, [None, timestep_size, 36])     # TODO change thi
 y = tf.placeholder(tf.float32, [None, 3])
 keep_prob = tf.placeholder(tf.float32)
 
-# --------------------------------------------
-#             Construct LSTM cells
-# --------------------------------------------
+# TODO： --------------------------------------------
+# TODO：             Construct LSTM cells
+# TODO： --------------------------------------------
 
-lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-                              forget_bias=1.0,
-                              state_is_tuple=True)
-#                              time_major=False)
-
-lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
-                               input_keep_prob=1.0,
-                               output_keep_prob=keep_prob)
-
-mlstm_cell = rnn.MultiRNNCell([lstm_cell] * layer_num, state_is_tuple=True)
-
-init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
 outputs, state = tf.nn.dynamic_rnn(mlstm_cell,
                                    inputs=_X,
@@ -124,7 +112,7 @@ h_state = outputs[:, -1, :]  # 或者 h_state = state[-1][1]
 W = tf.Variable(tf.truncated_normal([hidden_size, output_parameters],
                                     stddev=0.1),
                 dtype=tf.float32)
-bias = tf.Variable(tf.constant(0.1,shape=[output_parameters]),
+bias = tf.Variable(tf.constant(0.1, shape=[output_parameters]),
                    dtype=tf.float32)
 y_pre = tf.matmul(h_state, W) + bias
 
@@ -158,4 +146,5 @@ for i in range(training_epochs):
                                   y: target_set[1152:1536],
                                   batch_size: 384,
                                   keep_prob: 1})
+        # TODO：SAVE the model
         print("Epoch:"+str(i)+str(acc))
