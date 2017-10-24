@@ -67,19 +67,15 @@ LSTM由于我传给他的是一个序列，是一个Seq2Seq 即 序列对序列�
 
 在`Saver_Class.py`文件中，`h_state`变量是所有lstm Cell的最后一个时间下的输出（-1，36），我将最后一个时间片的一共hidden_size（256）个输出通过矩阵乘法，转变为output_parameters（3）。这样我只取了LSTM每一个Cell输出（71，1）的最后一个，一共256个，将他们通过矩阵变换，变换为我期望的3个监测污染物的输出。
 
-<font color=#40ffef size=18>任务：</font>
-需要做的就是在文件102行的位置，通过`rnn.LSTMCell`构建自己的LSTM网络，并且通过`mlstm_cell = rnn.MultiRNNCell`将多层LSTM连接起来。
+* 任务：需要做的就是在文件102行的位置，通过`rnn.LSTMCell`构建自己的LSTM网络，
+* 并且通过`mlstm_cell = rnn.MultiRNNCell`将多层LSTM连接起来。
 
 
 参考资料：
 
-LSTM模型的简单介绍
+[LSTM模型的简单介绍](http://www.jianshu.com/p/9dc9f41f0b29)
 
-http://www.jianshu.com/p/9dc9f41f0b29
-
-利用LSTM解决MNIST的训练
-
-http://blog.csdn.net/jerr__y/article/details/61195257
+[利用LSTM解决MNIST的训练](http://blog.csdn.net/jerr__y/article/details/61195257)
 
 
 ###Saver类用于保存模型
@@ -91,8 +87,8 @@ http://blog.csdn.net/jerr__y/article/details/61195257
 接下来我们可以选择是每一次都保存一下还是比如训练十次保存一下。
 
 		saver.save(sess, 
-					'你想要保存到的路径/model.ckpt', 
-					global_step=i+1)
+			'你想要保存到的路径/model.ckpt', 
+			global_step=i+1)
 
 其中`sess`是要保存的session，第二个参数是指定模型的路径以及名称，以Checkpoint\(`.ckpt`)为后缀，第三个参数是标志当前模型存档是第几个循环时保存得的数字。
 
@@ -106,8 +102,7 @@ http://blog.csdn.net/jerr__y/article/details/61195257
             
 通过这样的方法就可以将ckpt文件里面的模型恢复到当前session中，注意，这里恢复的只是模型中的变量值`Variable`，网络结构都不存在文件之中，所以还需要把之前构建Computation Graph的代码都运行一遍。构建出Computation Graph之后才能restore，如果尝试将一个128节点的model恢复到一个256节点的图中，Tensorflow会报错。
 
-<font color=#40ffef size=24>任务：</font>
-在Saver Class 149行前后的位置，在训练过程中，将模型保存到models文件夹下面。
+* 任务:在Saver Class 149行前后的位置，在训练过程中，将模型保存到models文件夹下面。
 
 
 Day3：CNN & deCNN & TensorBoard
