@@ -116,13 +116,12 @@ y_ = tf.nn.softmax(tf.matmul(h1_drop, W2) + b2)
 #           Construct Training Algo
 # --------------------------------------------
 
-# test
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y), reduction_indices=[1]))
 
 correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast((correct_prediction, tf.float32)))
 
-optimizer = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+optimizer = tf.train.GradientDescentOptimizer(lr).minimize(cross_entropy)
 
 # --------------------------------------------
 #               Start Training
@@ -135,9 +134,11 @@ with tf.Session() as sess:
         for i in range(total_batch):
             _, c = sess.run([optimizer, cross_entropy],
                             feed_dict={_X: training_set,
-                                       y:training_target})
+                                       y:training_target,
+                                       batch_size: 384,
+                                       keep_prob: 1})
             avg_cost += c / total_batch
 
         if (epoch % 5):
-            acc = accuracy.eval({_X: data[1152:1536], y: target_set[1152:1536]})
+            acc = accuracy.eval({_X: data[1152:1536], y: target_set[1152:1536], batch_size: 384, keep_prob: 0.5})
             print("Epoch: " + str(epoch) + "Acc: " + str(acc))
