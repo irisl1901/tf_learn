@@ -92,8 +92,8 @@ val_target = np.array(y[:1920])
 sess = tf.InteractiveSession()
 batch_size = tf.placeholder(tf.int32)
 # None corresponds to the batch size, can be of any size
-_X = tf.placeholder(tf.float32,[None, 71, 36])      # TODO：Add here
-y = tf.placeholder(tf.float32, [None, 3])       # TODO: Add here
+_X = tf.placeholder(tf.float32,[None, 71, 36])      # Add here
+y = tf.placeholder(tf.float32, [None, 3])       # Add here
 tf.reshape(_X, [-1])
 keep_prob = tf.placeholder(tf.float32)
 
@@ -116,6 +116,7 @@ y_ = tf.nn.softmax(tf.matmul(h1_drop, W2) + b2)
 # TODO:          Construct Training Algo
 # TODO: --------------------------------------------
 
+# test
 cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y), reduction_indices=[1]))
 
 correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
