@@ -91,23 +91,37 @@ val_target = np.array(y[:1920])
 
 sess = tf.InteractiveSession()
 batch_size = tf.placeholder(tf.int32)
-_X = tf.placeholder( )      # TODO：Add here
-y = tf.placeholder( )       # TODO: Add here
+# None corresponds to the batch size, can be of any size
+_X = tf.placeholder(tf.float32,[None, 71, 36])      # TODO：Add here
+y = tf.placeholder(tf.float32, [None, 3])       # TODO: Add here
+tf.reshape(_X, [-1])
+keep_prob = tf.placeholder(tf.float32)
 
 # TODO: --------------------------------------------
 # TODO:       Construct MLP computation graph
 # TODO: --------------------------------------------
 
+in_units = 2556
+h1_units = 300
+W1 = tf.Variable(tf.truncated_normal([in_units, h1_units], stddev=0.1))
+b1 = tf.Variable(tf.zeros([h1_units]))
+W2 = tf.Variable(tf.zeros([h1_units, 3]))
+b2 = tf.Variable(tf.zeros([3]))
 
+h1 = tf.nn.relu(tf.matmul(_X, W1) + b1)
+h1_drop = tf.nn.dropout(h1, keep_prob)
+y_ = tf.nn.softmax(tf.matmul(h1_drop, W2) + b2)
 
 # TODO: --------------------------------------------
 # TODO:          Construct Training Algo
 # TODO: --------------------------------------------
 
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y), reduction_indices=[1]))
 
-cost =
-accuracy =
-optimizer =
+correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast((correct_prediction, tf.float32)))
+
+optimizer = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
 # TODO:--------------------------------------------
 # TODO:              Start Training
@@ -118,7 +132,11 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for epoch in range(training_epochs):
         for i in range(total_batch):
-            _, c = sess.run([optimizer, cost],
+            _, c = sess.run([optimizer, cross_entropy],
                             feed_dict={_X: training_set,
                                        y:training_target})
             avg_cost += c / total_batch
+
+        if (epoch % 5):
+            acc = accuracy.eval({_X: data[1152:1536], y: target_set[1152:1536]})
+            print("Epoch: " + str(epoch) + "Acc: " + str(acc))
