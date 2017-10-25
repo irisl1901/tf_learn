@@ -67,8 +67,7 @@ LSTM由于我传给他的是一个序列，是一个Seq2Seq 即 序列对序列�
 
 在`Saver_Class.py`文件中，`h_state`变量是所有lstm Cell的最后一个时间下的输出（-1，36），我将最后一个时间片的一共hidden_size（256）个输出通过矩阵乘法，转变为output_parameters（3）。这样我只取了LSTM每一个Cell输出（71，1）的最后一个，一共256个，将他们通过矩阵变换，变换为我期望的3个监测污染物的输出。
 
-* 任务：需要做的就是在文件102行的位置，通过`rnn.LSTMCell`构建自己的LSTM网络，
-* 并且通过`mlstm_cell = rnn.MultiRNNCell`将多层LSTM连接起来。
+* 任务：需要做的就是在文件102行的位置，通过`rnn.LSTMCell`构建自己的LSTM网络，并且通过`mlstm_cell = rnn.MultiRNNCell`将多层LSTM连接起来。
 
 
 参考资料：

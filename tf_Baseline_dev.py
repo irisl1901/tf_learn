@@ -147,15 +147,15 @@ for i in range(training_epochs):
         start = batch*_batch_size
         end = (batch+1)*_batch_size
         sess.run(train_op,
-                 feed_dict={_X:data[start:end],
-                            y: target_set[start:end],
+                 feed_dict={_X: np_data[start:end],
+                            y: np_target[start:end],
                             keep_prob: 0.5,
                             batch_size: 384})
     #    print("========Iter:"+str(i)+",Accuracy:========",(acc))
     if(i%3==0):
         acc = sess.run(loss,
-                       feed_dict={_X: data[1152:1536],
-                                  y: target_set[1152:1536],
+                       feed_dict={_X: np_data[1152:1536],
+                                  y: np_target[1152:1536],
                                   batch_size: 384,
                                   keep_prob: 1})
         print("Epoch:"+str(i)+str(acc))
