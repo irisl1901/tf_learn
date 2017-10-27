@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 import random
 import ProgressBar as pb
-
+from tensorflow.python import debug as tf_debug
 
 hop = 71
 timestep_size = 71      # Hours of looking ahead
@@ -27,7 +27,7 @@ split = 200
 leap = 6
 length = 16
 
-lr = 0.0001
+lr = 0.0001 
 hidden_size = 256
 layer_num = 3
 
@@ -88,37 +88,95 @@ training_set = np.array(X[1920:])
 training_target = np.array(y[1920:])
 val_set = np.array(X[:1920])
 val_target = np.array(y[:1920])
+test_set = np.array(X[1152:1536])
+test_target = np.array(y[1152:1536])
 
 sess = tf.InteractiveSession()
 batch_size = tf.placeholder(tf.int32)
-_X = tf.placeholder( )      # TODO：Add here
-y = tf.placeholder( )       # TODO: Add here
+# None corresponds to the batch size, can be of any size
+_X = tf.placeholder(tf.float32, [None, 71, 36])      # Add here
+y = tf.placeholder(tf.float32, [None, 3])       # Add here
+keep_prob = tf.placeholder(tf.float32)
 
-# TODO: --------------------------------------------
-# TODO:       Construct MLP computation graph
-# TODO: --------------------------------------------
+# --------------------------------------------
+#        Construct MLP computation graph
+#  --------------------------------------------
+
+in_units = 2556
+h1_units = 300
+h2_units = 300
+h3_units = 300
+W1 = tf.Variable(tf.truncated_normal([in_units, h1_units], stddev=0.1))
+b1 = tf.Variable(tf.zeros([h1_units]))
+W2 = tf.Variable(tf.zeros([h1_units, h2_units]))
+b2 = tf.Variable(tf.zeros([h2_units]))
+W3 = tf.Variable(tf.zeros([h2_units, 3]))
+b3 = tf.Variable(tf.zeros([3]))
+
+_X = tf.reshape(_X, [-1, 2556])
+h1 = tf.nn.relu(tf.matmul(_X, W1) + b1)
+h1_drop = tf.nn.dropout(h1, keep_prob)
+h2 = tf.nn.relu(tf.matmul(h1_drop, W2) + b2)
+h2_drop = tf.nn.dropout(h2, keep_prob)
+#y_ = tf.nn.softmax(tf.matmul(h2_drop, W3) + b3)
+#y_ = tf.nn.relu(tf.matmul(h2_drop, W3) + b3)
+y_ = tf.nn.sigmoid(tf.matmul(h2_drop, W3) + b3)
+
+# --------------------------------------------
+#           Construct Training Algo
+# --------------------------------------------
+
+#cross_entropy = -tf.reduce_mean(y * tf.log(y_)
+cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=y_)
+loss = tf.reduce_mean(tf.abs(y_-y),0)
+#MSE = tf.reduce_mean(tf.square(y-y_))
+#loss = MSE
+optimizer = tf.train.GradientDescentOptimizer(lr).minimize(cross_entropy)
+#optimizer = tf.train.GradientDescentOptimizer(lr).minimize(MSE)
+
+correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
+# --------------------------------------------
+#               Start Training
+# --------------------------------------------
 
-# TODO: --------------------------------------------
-# TODO:          Construct Training Algo
-# TODO: --------------------------------------------
+#avg_cost = 0
+#with tf.Session() as sess:
+#    sess.run(tf.global_variables_initializer())
+#    for epoch in range(training_epochs):
+#        for i in range(total_batch):
+#            _, c = sess.run([optimizer, cross_entropy],
+#                            feed_dict={_X: training_set,
+#                                       y: training_target})
+#            print training_set.shape
+#            avg_cost += c / total_batch
+#            print avg_cost
+#
+#        if (epoch % 5):
+#            acc = accuracy.eval({_X: test_set, y: test_target, batch_size: 384, keep_prob: 1})
+#            print("Epoch: " + str(epoch) + "Acc: " + str(acc))
 
+sess.run(tf.global_variables_initializer())
+count = 0
+for i in range(6000):
+    _batch_size = 384
+    batch = random.randint(5, 36)
+    start = batch*_batch_size
+    end = (batch+1)*_batch_size
 
-cost =
-accuracy =
-optimizer =
-
-# TODO:--------------------------------------------
-# TODO:              Start Training
-# TODO:--------------------------------------------
-
-avg_cost = 0
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    for epoch in range(training_epochs):
-        for i in range(total_batch):
-            _, c = sess.run([optimizer, cost],
-                            feed_dict={_X: training_set,
-                                       y:training_target})
-            avg_cost += c / total_batch
+    sess.run(optimizer,
+             feed_dict={_X:np_data.reshape(-1, 2556)[start:end],
+                        y: target_set[start:end],
+                        keep_prob: 0.5,
+                        batch_size: 384})
+#   sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+    if not (i % 20):
+        acc = sess.run(loss,
+                       feed_dict={_X: np_data.reshape(-1, 2556)[1152:1536],
+                                  y: target_set[1152:1536],
+                                  batch_size: 384,
+                                  keep_prob: 1})
+        print("Epoch:"+str(count)+str(acc))
+        count = count+1
