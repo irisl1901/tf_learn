@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.contrib import rnn
 import random
 import ProgressBar as pb
+from tensorflow.python import control_flow_ops
 
 
 hop = 71
@@ -22,6 +23,36 @@ def process(x):
         return 0.0
     else:
         return float(x)
+
+def batch_norm(x, n_out, phase_train, scope='bn'):
+    """
+    Batch normalization on convolutional maps.
+    Args:
+        x:           Tensor, 4D BHWD input maps
+        n_out:       integer, depth of input maps
+        phase_train: boolean tf.Varialbe, true indicates training phase
+        scope:       string, variable scope
+    Return:
+        normed:      batch-normalized maps
+    """
+    with tf.variable_scope(scope):
+        beta = tf.Variable(tf.constant(0.0, shape=[n_out]),
+                                     name='beta', trainable=True)
+        gamma = tf.Variable(tf.constant(1.0, shape=[n_out]),
+                                      name='gamma', trainable=True)
+        batch_mean, batch_var = tf.nn.moments(x, [0,1,2], name='moments')
+        ema = tf.train.ExponentialMovingAverage(decay=0.5)
+
+        def mean_var_with_update():
+            ema_apply_op = ema.apply([batch_mean, batch_var])
+            with tf.control_dependencies([ema_apply_op]):
+                return tf.identity(batch_mean), tf.identity(batch_var)
+
+        mean, var = tf.cond(phase_train,
+                            mean_var_with_update,
+                            lambda: (ema.average(batch_mean), ema.average(batch_var)))
+        normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+    return normed
 
 dataset = []
 split = 200
@@ -147,15 +178,37 @@ for i in range(training_epochs):
         start = batch*_batch_size
         end = (batch+1)*_batch_size
         sess.run(train_op,
-                 feed_dict={_X: np_data[start:end],
-                            y: np_target[start:end],
+                 feed_dict={_X:data[start:end],
+                            y: target_set[start:end],
                             keep_prob: 0.5,
                             batch_size: 384})
     #    print("========Iter:"+str(i)+",Accuracy:========",(acc))
-    if(i%3==0):
+    if(i%3!=0):
         acc = sess.run(loss,
-                       feed_dict={_X: np_data[1152:1536],
-                                  y: np_target[1152:1536],
+                       feed_dict={_X: data[1152:1536],
+                                  y: target_set[1152:1536],
                                   batch_size: 384,
                                   keep_prob: 1})
         print("Epoch:"+str(i)+str(acc))
+
+
+import math
+
+n_in, n_out = 3, 16
+ksize = 3
+stride = 1
+phase_train = tf.placeholder(tf.bool, name='phase_train')
+input_image = tf.placeholder(tf.float32, name='input_image')
+kernel = tf.Variable(tf.truncated_normal([ksize, ksize, n_in, n_out],
+                                   stddev=math.sqrt(2.0/(ksize*ksize*n_out))),
+                                   name='kernel')
+conv = tf.nn.conv2d(input_image, kernel, [1,stride,stride,1], padding='SAME')
+conv_bn = batch_norm(conv, n_out, phase_train)
+relu = tf.nn.relu(conv_bn)
+
+with tf.Session() as session:
+    session.run(tf.initialize_all_variables())
+    for i in range(20):
+        test_image = np.random.rand(4,32,32,3)
+        sess_outputs = session.run([relu],
+          {input_image.name: test_image, phase_train.name: True})

@@ -36,6 +36,91 @@ Day 1:MLP & Placeholder & Reshape
 
 P.S. 这种做法我没有测试过标准结果，由于数据集分割问题，训练一开始有可能会出现测试集准确率高于训练集的情况。
 
+Day2:LSTM & Saver Class保存模型
+---
+
+###LSTM记忆网络
+大家已经看过了多层感知器网络，这种网络我们可以吧所有的历史信息（在这个样例里面71小时的信息）一股脑的送到神经网络中，期望他固定的给我们一个结果。然而在真实的情况下，
+
+* 一方面我们希望我们训练出一个模型之后不仅能接收71小时的数据，同时还能接收100小时的数据，还能接受1000小时的数据
+* 另一方面，之前的网络在感知之后，信息就消逝了，并没有能保留在网络之中，有时候历史上的信息对现在的训练也是会产生影响的。
+
+为了解决上面这两个问题，人们简单的想：`那我直接把输出的结果再送回输入`不就好啦，这就是最简单的RNN的雏形。
+
+ ![image](https://github.com/Acce1erat0rS/tf_learn/raw/master/imag/42741-d6749df8fb93b0b0.png)
+ 
+ 这就是一个RNN Cell按照时间展开的示意图
+
+但是不幸的是，这样的方式网络的记忆力并不是这么好长期信息丢失的很厉害，所以就有了LSTM（LSTM有很多变体，GRU是最常见的一种）.
+
+我们在Tensorflow中并不需要自己实现LSTM，
+
+		from tensorflow.contrib import rnn
+
+之后可以直接调用：
+
+		lstm_cell = rnn.LSTMCell(num_units=hidden_size,
+                              forget_bias=1.0,
+                              state_is_tuple=True，                                									time_major=False)
+
+LSTM由于我传给他的是一个序列，是一个Seq2Seq 即 序列对序列的训练过程。我把连续的（假如）100个小时的数据送入神经网络，每当我送入一小时的数据，我期望LSTM网络输出24小时后的数据。即送入0，输出24，送入1，输出25······送入100，输出124.所以输入的状态应该是（71，36），即我每一组的输入有71个小时，每小时有36个数据项。输出应该为（71，1）即每送入一小时的数据（36），网络就会输出一个数据。
+
+在`Saver_Class.py`文件中，`h_state`变量是所有lstm Cell的最后一个时间下的输出（-1，36），我将最后一个时间片的一共hidden_size（256）个输出通过矩阵乘法，转变为output_parameters（3）。这样我只取了LSTM每一个Cell输出（71，1）的最后一个，一共256个，将他们通过矩阵变换，变换为我期望的3个监测污染物的输出。
+
+* 任务：需要做的就是在文件102行的位置，通过`rnn.LSTMCell`构建自己的LSTM网络，并且通过`mlstm_cell = rnn.MultiRNNCell`将多层LSTM连接起来。
+
+
+参考资料：
+
+[LSTM模型的简单介绍](http://www.jianshu.com/p/9dc9f41f0b29)
+
+[利用LSTM解决MNIST的训练](http://blog.csdn.net/jerr__y/article/details/61195257)
+
+
+###Saver类用于保存模型
+我们不可能每一次训练都从新开始，并且我们也希望能保存下来我们训练的模型。这个时候Tensorflow提供了一个简单的方法。首先我们需要创建一个`Saver`对象：
+
+		saver = tf.train.Saver()
+
+这个对象如果在初始化时不指定内容，会自动存储所有的Variable变量。
+接下来我们可以选择是每一次都保存一下还是比如训练十次保存一下。
+
+		saver.save(sess, 
+			'你想要保存到的路径/model.ckpt', 
+			global_step=i+1)
+
+其中`sess`是要保存的session，第二个参数是指定模型的路径以及名称，以Checkpoint\(`.ckpt`)为后缀，第三个参数是标志当前模型存档是第几个循环时保存得的数字。
+
+恢复模型时，
+
+		ckpt = tf.train.get_checkpoint_state(checkpoint_dir)  
+        if ckpt and ckpt.model_checkpoint_path:  
+            saver.restore(sess, ckpt.model_checkpoint_path)  
+        else:  
+            pass  
+            
+通过这样的方法就可以将ckpt文件里面的模型恢复到当前session中，注意，这里恢复的只是模型中的变量值`Variable`，网络结构都不存在文件之中，所以还需要把之前构建Computation Graph的代码都运行一遍。构建出Computation Graph之后才能restore，如果尝试将一个128节点的model恢复到一个256节点的图中，Tensorflow会报错。
+
+* 任务:在Saver Class 149行前后的位置，在训练过程中，将模型保存到models文件夹下面。
+
+
+Day3：CNN & deCNN & TensorBoard
+---
+Comming soon.
+
+
+Day4：BatchNorm & 获取变量里面的值
+---
+Comming soon.
+
+Day5：Highway & tdnn
+---
+Comming soon.
+
+Day6：利用Profile分析代码效率
+---
+Comming soon.
+
 
 
 tf\_Baseline_dev.py
