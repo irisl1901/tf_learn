@@ -91,7 +91,7 @@ val_set = np.array(X[:1920])
 val_target = np.array(y[:1920])
 
 sess = tf.InteractiveSession()
-batch_size = tf.placeholder(tf.int32, [])
+batch_size = tf.placeholder(tf.int32)
 _X = tf.placeholder(tf.float32, [None, timestep_size, 36])     # TODO change this to the divided ver
 y = tf.placeholder(tf.float32, [None, 3])
 keep_prob = tf.placeholder(tf.float32)
@@ -102,29 +102,18 @@ keep_prob = tf.placeholder(tf.float32)
 
 # Add here
 
-#lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-#                         forget_bias=1.0,
-#                         state_is_tuple=True)
+lstm_cell = rnn.LSTMCell(num_units=hidden_size,
+                         forget_bias=1.0,
+                         state_is_tuple=True)
 
-#lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
-#                               input_keep_prob=1.0,
-#                               output_keep_prob=keep_prob)
+lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
+                               input_keep_prob=1.0,
+                               output_keep_prob=keep_prob)
 
-# mlstm_cell = rnn.MultiRNNCell([lstm_cell]*layer_num, state_is_tuple=True)
-
-m_cells = []
-for i in range(3):
-  lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-                          forget_bias=1.0,
-                          state_is_tuple=True)
-  lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
-                                 input_keep_prob=1.0,
-                                 output_keep_prob=keep_prob)
-  m_cells.append(lstm_cell)
-
-mlstm_cell = rnn.MultiRNNCell(cells=m_cells, state_is_tuple=True)
+mlstm_cell = rnn.MultiRNNCell([lstm_cell]*layer_num, state_is_tuple=True)
 
 init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
+
 outputs, state = tf.nn.dynamic_rnn(mlstm_cell,
                                    inputs=_X,
                                    initial_state=init_state)
@@ -171,7 +160,7 @@ for i in range(training_epochs):
                                   batch_size: 384,
                                   keep_prob: 1})
 
-        # Add here: SAVE the model
+        # Add here：SAVE the model
         saver = tf.train.Saver()
         saver.save(sess, './models/model.ckpt', global_step=i+1)
 

@@ -52,12 +52,12 @@ cur_start = start
 cur_end = start+hop*3600
 count = 0
 
-#bar = pb.ProgressBar(total=(end-start)/3600)
+bar = pb.ProgressBar(total=(end-start)/3600)
 while(cur_end < end-(120+288)*3600):
-#    bar.move()
+    bar.move()
     count += 1
-#    if(count % 100 == 0):
-#        bar.log('Preparing : ' + str(cur_end) + ' till 1448564400')
+    if(count % 100 == 0):
+        bar.log('Preparing : ' + str(cur_end) + ' till 1448564400')
     buff = []
     for i in range(hop):
         hour = []
@@ -91,7 +91,7 @@ val_set = np.array(X[:1920])
 val_target = np.array(y[:1920])
 
 sess = tf.InteractiveSession()
-batch_size = tf.placeholder(tf.int32, [])
+batch_size = tf.placeholder(tf.int32)
 _X = tf.placeholder(tf.float32, [None, timestep_size, 36])     # TODO change this to the divided ver
 y = tf.placeholder(tf.float32, [None, 3])
 keep_prob = tf.placeholder(tf.float32)
@@ -100,29 +100,16 @@ keep_prob = tf.placeholder(tf.float32)
 #             Construct LSTM cells
 # --------------------------------------------
 
-#lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-#                              forget_bias=1.0,
-#                              state_is_tuple=True)
-##                              time_major=False)
-#
-#lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
-#                               input_keep_prob=1.0,
-#                               output_keep_prob=keep_prob)
-#
-#mlstm_cell = rnn.MultiRNNCell([lstm_cell] * layer_num, state_is_tuple=True)
+lstm_cell = rnn.LSTMCell(num_units=hidden_size,
+                              forget_bias=1.0,
+                              state_is_tuple=True)
+#                              time_major=False)
 
-m_cells = []
-for i in range(3):
-  lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-                          forget_bias=1.0,
-                          state_is_tuple=True)
-  lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
-                                 input_keep_prob=1.0,
-                                 output_keep_prob=keep_prob)
-  m_cells.append(lstm_cell)
+lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
+                               input_keep_prob=1.0,
+                               output_keep_prob=keep_prob)
 
-mlstm_cell = rnn.MultiRNNCell(cells=m_cells, state_is_tuple=True)
-
+mlstm_cell = rnn.MultiRNNCell([lstm_cell] * layer_num, state_is_tuple=True)
 
 init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
