@@ -96,10 +96,23 @@ _X = tf.placeholder(tf.float32, [None, timestep_size, 36])     # TODO change thi
 y = tf.placeholder(tf.float32, [None, 3])
 keep_prob = tf.placeholder(tf.float32)
 
-# TODO： --------------------------------------------
-# TODO：             Construct LSTM cells
-# TODO： --------------------------------------------
+#  --------------------------------------------
+#             Construct LSTM cells
+#  --------------------------------------------
 
+# Add here
+
+lstm_cell = rnn.LSTMCell(num_units=hidden_size,
+                         forget_bias=1.0,
+                         state_is_tuple=True)
+
+lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
+                               input_keep_prob=1.0,
+                               output_keep_prob=keep_prob)
+
+mlstm_cell = rnn.MultiRNNCell([lstm_cell]*layer_num, state_is_tuple=True)
+
+init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
 outputs, state = tf.nn.dynamic_rnn(mlstm_cell,
                                    inputs=_X,
@@ -109,6 +122,7 @@ h_state = outputs[:, -1, :]  # 或者 h_state = state[-1][1]
 # --------------------------------------------
 #    Convert LSTM output to tensor of three
 # --------------------------------------------
+
 W = tf.Variable(tf.truncated_normal([hidden_size, output_parameters],
                                     stddev=0.1),
                 dtype=tf.float32)
@@ -122,7 +136,6 @@ loss = tf.reduce_mean(tf.abs(y_pre-y),0)
 
 correct_prediction = tf.equal(tf.argmax(y_pre,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
-
 
 # --------------------------------------------
 #               Start Training
@@ -146,5 +159,9 @@ for i in range(training_epochs):
                                   y: target_set[1152:1536],
                                   batch_size: 384,
                                   keep_prob: 1})
-        # TODO：SAVE the model
+
+        # Add here：SAVE the model
+        saver = tf.train.Saver()
+        saver.save(sess, './models/model.ckpt', global_step=i+1)
+
         print("Epoch:"+str(i)+str(acc))
