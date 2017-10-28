@@ -91,26 +91,26 @@ val_set = np.array(X[:1920])
 val_target = np.array(y[:1920])
 
 sess = tf.InteractiveSession()
-#batch_size = tf.placeholder(tf.int32,[])
-batch_size = 384
+batch_size = tf.placeholder(tf.int32)
 _X = tf.placeholder(tf.float32, [None, timestep_size, 36])     # TODO change this to the divided ver
 y = tf.placeholder(tf.float32, [None, 3])
 keep_prob = tf.placeholder(tf.float32)
 
-# --------------------------------------------
+#  --------------------------------------------
 #             Construct LSTM cells
-# --------------------------------------------
+#  --------------------------------------------
+
+# Add here
 
 lstm_cell = rnn.LSTMCell(num_units=hidden_size,
-                              forget_bias=1.0,
-                              state_is_tuple=True)
-#                              time_major=False)
+                         forget_bias=1.0,
+                         state_is_tuple=True)
 
 lstm_cell = rnn.DropoutWrapper(cell=lstm_cell,
                                input_keep_prob=1.0,
                                output_keep_prob=keep_prob)
 
-mlstm_cell = rnn.MultiRNNCell([lstm_cell] * layer_num, state_is_tuple=True)
+mlstm_cell = rnn.MultiRNNCell([lstm_cell]*layer_num, state_is_tuple=True)
 
 init_state = mlstm_cell.zero_state(batch_size, dtype=tf.float32)
 
@@ -122,10 +122,11 @@ h_state = outputs[:, -1, :]  # 或者 h_state = state[-1][1]
 # --------------------------------------------
 #    Convert LSTM output to tensor of three
 # --------------------------------------------
+
 W = tf.Variable(tf.truncated_normal([hidden_size, output_parameters],
                                     stddev=0.1),
                 dtype=tf.float32)
-bias = tf.Variable(tf.constant(0.1,shape=[output_parameters]),
+bias = tf.Variable(tf.constant(0.1, shape=[output_parameters]),
                    dtype=tf.float32)
 y_pre = tf.matmul(h_state, W) + bias
 
@@ -136,28 +137,39 @@ loss = tf.reduce_mean(tf.abs(y_pre-y),0)
 correct_prediction = tf.equal(tf.argmax(y_pre,1), tf.argmax(y,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-
 # --------------------------------------------
 #               Start Training
 # --------------------------------------------
 
 sess.run(tf.global_variables_initializer())
+
+# Add here: RESTORE the model
+saver = tf.train.Saver()
+
 count = 0
 for i in range(training_epochs):
-    for batch in range(5, 36):
-        start = batch*_batch_size
-        end = (batch+1)*_batch_size
-        sess.run(train_op,
-                 feed_dict={_X: np_data[start:end],
-                            y: np_target[start:end],
-                            keep_prob: 0.5,
-                            batch_size: 384})
+    #for batch in range(5, 36):
+    #    start = batch*_batch_size
+    #    end = (batch+1)*_batch_size
+    #    sess.run(train_op,
+    #             feed_dict={_X:data[start:end],
+    #                        y: target_set[start:end],
+    #                        keep_prob: 0.5,
+    #                        batch_size: 384})
+
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir='./models')
+    if ckpt and ckpt.model_checkpoint_path:
+        saver.restore(sess, ckpt.model_checkpoint_path)
+    else:
+        pass
+
     #    print("========Iter:"+str(i)+",Accuracy:========",(acc))
     if(i%3==0):
-        acc = sess.run(loss,
-                       feed_dict={_X: np_data[1152:1536],
-                                  y: np_target[1152:1536],
+        acc = sess.run(accuracy,
+                       feed_dict={_X: data[1152:1536],
+                                  y: target_set[1152:1536],
                                   batch_size: 384,
                                   keep_prob: 1})
-        print("Epoch:"+str(i)+str(acc))
 
+
+        print("Epoch:"+str(i)+str(acc))
